@@ -36,3 +36,6 @@ cybersecurity_service_desk.db
 
 # VS Code
 .vscode/
+
+# env variables
+.env
