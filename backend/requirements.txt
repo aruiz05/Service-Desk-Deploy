@@ -7,6 +7,9 @@ uvicorn[standard]>=0.35,<1.0
 # Database toolkit used for the SQLite connection.
 sqlalchemy>=2.0,<3.0
 
+# PostgreSQL driver for deployed SQLAlchemy connections.
+psycopg[binary]>=3.2,<4.0
+
 # Data validation library used by FastAPI.
 pydantic>=2.0,<3.0
 
