@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +37,8 @@ frontend_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+if frontend_url := os.getenv("FRONTEND_URL"):
+    frontend_origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

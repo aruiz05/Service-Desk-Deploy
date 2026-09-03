@@ -203,6 +203,13 @@ def get_priority_counts(db: Session) -> list[schemas.PriorityCount]:
 
 
 # Return daily created/resolved counts for a continuous date range.
+def normalize_trend_day(value) -> date:
+    if isinstance(value, date):
+        return value
+
+    return date.fromisoformat(value)
+
+
 def get_ticket_trends(db: Session, days: int = 30) -> list[schemas.TrendPoint]:
     today = sla.utc_now().date()
     start_date = today - timedelta(days=days - 1)
@@ -225,8 +232,8 @@ def get_ticket_trends(db: Session, days: int = 30) -> list[schemas.TrendPoint]:
         .group_by(func.date(models.Ticket.resolved_at))
     ).all()
 
-    created_counts = {date.fromisoformat(day): count for day, count in created_rows}
-    resolved_counts = {date.fromisoformat(day): count for day, count in resolved_rows}
+    created_counts = {normalize_trend_day(day): count for day, count in created_rows}
+    resolved_counts = {normalize_trend_day(day): count for day, count in resolved_rows}
 
     # Include zero-count days so dashboard charts can use a continuous timeline.
     return [
