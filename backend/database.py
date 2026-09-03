@@ -1,19 +1,60 @@
 
 from collections.abc import Generator
+import os
+from urllib.parse import urlsplit, urlunsplit
 
 # SQLAlchemy creates the database engine and manages database sessions
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
-# local SQLite database file 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./cybersecurity_service_desk.db"
+DEFAULT_DATABASE_URL = "sqlite:///./cybersecurity_service_desk.db"
+
+
+def normalize_database_url(database_url: str) -> str:
+    parsed_url = urlsplit(database_url)
+
+    if parsed_url.scheme in {"postgres", "postgresql"}:
+        return urlunsplit(
+            (
+                "postgresql+psycopg",
+                parsed_url.netloc,
+                parsed_url.path,
+                parsed_url.query,
+                parsed_url.fragment,
+            )
+        )
+
+    return database_url
+
+
+def is_sqlite_url(database_url: str) -> bool:
+    return urlsplit(database_url).scheme.startswith("sqlite")
+
+
+def is_postgresql_url(database_url: str) -> bool:
+    return urlsplit(database_url).scheme.startswith("postgresql")
+
+
+# Use a deployment database when configured, otherwise keep the local SQLite file.
+SQLALCHEMY_DATABASE_URL = normalize_database_url(
+    os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+)
+
+engine_kwargs = {}
+
+if is_sqlite_url(SQLALCHEMY_DATABASE_URL):
+    # Required for SQLite when FastAPI handles requests across threads.
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+if is_postgresql_url(SQLALCHEMY_DATABASE_URL):
+    # Keeps stale pooled PostgreSQL connections from being reused.
+    engine_kwargs["pool_pre_ping"] = True
 
 # create the SQLAlchemy engine 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    # required for SQLite when FastAPI handles requests across threads
-    connect_args={"check_same_thread": False},
+    **engine_kwargs,
 )
 
 # factory for creating database session objects
