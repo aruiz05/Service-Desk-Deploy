@@ -273,6 +273,9 @@ function KnowledgeBase() {
               <div>
                 <p className="panel-label">{article.category}</p>
                 <h3>{article.title}</h3>
+                {article.demo_protected ? (
+                  <span className="demo-protection-badge">Protected Demo</span>
+                ) : null}
               </div>
               <p>{article.summary}</p>
               <span>Updated {formatDateTime(article.updated_at)}</span>

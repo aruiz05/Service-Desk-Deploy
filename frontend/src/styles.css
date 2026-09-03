@@ -538,6 +538,29 @@ p {
   font-weight: 750;
 }
 
+.demo-protection-notice,
+.demo-protection-badge {
+  width: fit-content;
+  border: 1px solid #f3d58b;
+  border-radius: 999px;
+  background: #fff8e6;
+  color: #8a5d12;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.demo-protection-notice {
+  margin-top: 10px;
+  padding: 7px 10px;
+}
+
+.demo-protection-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  padding: 4px 9px;
+}
+
 .form-error {
   margin-bottom: 18px;
   border: 1px solid #efb2aa;

@@ -94,6 +94,7 @@ function TicketDetail() {
   }, [formData, ticket]);
 
   const hasChanges = Object.keys(patchPayload).length > 0;
+  const isDemoProtected = Boolean(ticket?.demo_protected);
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -108,6 +109,13 @@ function TicketDetail() {
 
   async function saveChanges(event) {
     event.preventDefault();
+
+    if (isDemoProtected) {
+      setSaveError(
+        "Protected demo record - create a new ticket to test editing or deletion.",
+      );
+      return;
+    }
 
     if (!hasChanges) {
       return;
@@ -135,7 +143,7 @@ function TicketDetail() {
   }
 
   async function handleDeleteTicket() {
-    if (isDeleting) {
+    if (isDeleting || isDemoProtected) {
       return;
     }
 
@@ -195,6 +203,12 @@ function TicketDetail() {
         <div>
           <p className="eyebrow">{ticket.ticket_number}</p>
           <h2>{ticket.title}</h2>
+          {isDemoProtected ? (
+            <p className="demo-protection-notice">
+              Protected demo record - create a new ticket to test editing or
+              deletion.
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -282,6 +296,7 @@ function TicketDetail() {
               name="priority"
               value={formData.priority}
               onChange={updateField}
+              disabled={isDemoProtected}
             >
               {TICKET_PRIORITIES.map((priority) => (
                 <option key={priority} value={priority}>
@@ -298,6 +313,7 @@ function TicketDetail() {
               name="status"
               value={formData.status}
               onChange={updateField}
+              disabled={isDemoProtected}
             >
               {TICKET_STATUSES.map((status) => (
                 <option key={status} value={status}>
@@ -314,6 +330,7 @@ function TicketDetail() {
               name="assigned_team"
               value={formData.assigned_team}
               onChange={updateField}
+              disabled={isDemoProtected}
             >
               {ASSIGNED_TEAMS.map((team) => (
                 <option key={team} value={team}>
@@ -334,6 +351,7 @@ function TicketDetail() {
               rows="5"
               value={formData.resolution_notes}
               onChange={updateField}
+              disabled={isDemoProtected}
             />
           </label>
         </div>
@@ -345,7 +363,7 @@ function TicketDetail() {
           <button
             className="primary-button"
             type="submit"
-            disabled={!hasChanges || isSaving}
+            disabled={isDemoProtected || !hasChanges || isSaving}
           >
             {isSaving ? "Saving..." : "Save Changes"}
           </button>
@@ -357,7 +375,9 @@ function TicketDetail() {
           <p className="panel-label">Destructive Action</p>
           <h3>Delete Ticket</h3>
           <p className="supporting-text">
-            Permanently remove {ticket.ticket_number} from the ticket queue.
+            {isDemoProtected
+              ? "Protected demo tickets cannot be removed from the ticket queue."
+              : `Permanently remove ${ticket.ticket_number} from the ticket queue.`}
           </p>
         </div>
 
@@ -369,7 +389,7 @@ function TicketDetail() {
           <button
             className="danger-button"
             type="button"
-            disabled={isDeleting}
+            disabled={isDemoProtected || isDeleting}
             onClick={handleDeleteTicket}
           >
             {isDeleting ? "Deleting..." : "Delete Ticket"}

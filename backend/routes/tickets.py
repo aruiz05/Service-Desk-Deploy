@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .. import crud, models, schemas
+from .. import crud, demo_protection, models, schemas
 from ..database import get_db
 from ..enums import AssignedTeam, Department, TicketCategory, TicketPriority, TicketStatus
 
@@ -27,6 +27,33 @@ def create_ticket(
     ticket: schemas.TicketCreate,
     db: Session = Depends(get_db),
 ) -> models.Ticket:
+    if demo_protection.is_demo_mode_enabled():
+        if demo_protection.is_protected_ticket_title(ticket.title):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This ticket title is reserved for protected demo records.",
+            )
+
+        existing_tickets, total = crud.get_tickets(db=db, page=1, page_size=100)
+        extra_count = sum(
+            1
+            for existing_ticket in existing_tickets
+            if not demo_protection.is_protected_ticket(existing_ticket)
+        )
+        if total > len(existing_tickets):
+            all_tickets, _ = crud.get_tickets(db=db, page=1, page_size=total)
+            extra_count = sum(
+                1
+                for existing_ticket in all_tickets
+                if not demo_protection.is_protected_ticket(existing_ticket)
+            )
+
+        if extra_count >= demo_protection.get_max_extra_tickets():
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Demo ticket limit reached. Delete a temporary ticket before creating another.",
+            )
+
     try:
         return crud.create_ticket(db, ticket)
     except IntegrityError as exc:
@@ -123,6 +150,20 @@ def update_ticket(
             detail="Ticket not found",
         )
 
+    if demo_protection.is_protected_ticket(db_ticket):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Protected demo ticket - create a new ticket to test editing.",
+        )
+
+    if demo_protection.is_demo_mode_enabled() and demo_protection.is_protected_ticket_title(
+        ticket_update.title
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This ticket title is reserved for protected demo records.",
+        )
+
     try:
         return crud.update_ticket(db, db_ticket, ticket_update)
     except IntegrityError as exc:
@@ -142,6 +183,12 @@ def delete_ticket(ticket_id: int, db: Session = Depends(get_db)) -> Response:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket not found",
+        )
+
+    if demo_protection.is_protected_ticket(db_ticket):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Protected demo ticket - create a new ticket to test deletion.",
         )
 
     crud.delete_ticket(db, db_ticket)

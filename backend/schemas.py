@@ -64,6 +64,7 @@ class TicketResponse(TicketBase):
     first_response_at: datetime | None = None
     resolved_at: datetime | None = None
     resolution_notes: str | None = None
+    demo_protected: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -160,5 +161,6 @@ class KnowledgeArticleResponse(KnowledgeArticleBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    demo_protected: bool = False
 
     model_config = ConfigDict(from_attributes=True)

@@ -94,6 +94,7 @@ function KnowledgeArticle() {
   }, [article, formData]);
 
   const hasChanges = Object.keys(patchPayload).length > 0;
+  const isDemoProtected = Boolean(article?.demo_protected);
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -120,6 +121,13 @@ function KnowledgeArticle() {
 
   async function saveChanges(event) {
     event.preventDefault();
+
+    if (isDemoProtected) {
+      setSaveError(
+        "Protected demo record - create a new article to test editing or deletion.",
+      );
+      return;
+    }
 
     if (!hasChanges) {
       setIsEditing(false);
@@ -149,7 +157,7 @@ function KnowledgeArticle() {
   }
 
   async function handleDeleteArticle() {
-    if (isDeleting) {
+    if (isDeleting || isDemoProtected) {
       return;
     }
 
@@ -212,11 +220,18 @@ function KnowledgeArticle() {
           <p className="eyebrow">{article.category}</p>
           <h2>{article.title}</h2>
           <p className="supporting-text">{article.summary}</p>
+          {isDemoProtected ? (
+            <p className="demo-protection-notice">
+              Protected demo record - create a new article to test editing or
+              deletion.
+            </p>
+          ) : null}
         </div>
         <div className="button-row detail-actions">
           <button
             className="secondary-button"
             type="button"
+            disabled={isDemoProtected}
             onClick={() => {
               if (isEditing) {
                 cancelEdit();
@@ -225,7 +240,11 @@ function KnowledgeArticle() {
               }
             }}
           >
-            {isEditing ? "Close Editor" : "Edit Article"}
+            {isDemoProtected
+              ? "Protected Demo"
+              : isEditing
+                ? "Close Editor"
+                : "Edit Article"}
           </button>
         </div>
       </div>
@@ -339,7 +358,9 @@ function KnowledgeArticle() {
           <p className="panel-label">Destructive Action</p>
           <h3>Delete Article</h3>
           <p className="supporting-text">
-            Permanently remove this article from the knowledge base.
+            {isDemoProtected
+              ? "Protected demo articles cannot be removed from the knowledge base."
+              : "Permanently remove this article from the knowledge base."}
           </p>
         </div>
 
@@ -351,7 +372,7 @@ function KnowledgeArticle() {
           <button
             className="danger-button"
             type="button"
-            disabled={isDeleting}
+            disabled={isDemoProtected || isDeleting}
             onClick={handleDeleteArticle}
           >
             {isDeleting ? "Deleting..." : "Delete Article"}

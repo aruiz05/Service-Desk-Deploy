@@ -4,6 +4,7 @@ from enum import Enum as PythonEnum
 from sqlalchemy import DateTime, Enum as SQLAlchemyEnum, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from . import demo_protection
 from .database import Base
 from .enums import (
     AssignedTeam,
@@ -75,6 +76,10 @@ class Ticket(Base):
     )
     resolution_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    @property
+    def demo_protected(self) -> bool:
+        return demo_protection.is_protected_ticket(self)
+
 
 class TicketCounter(Base):
     __tablename__ = "ticket_counters"
@@ -106,3 +111,7 @@ class KnowledgeArticle(Base):
         onupdate=utc_now,
         nullable=False,
     )
+
+    @property
+    def demo_protected(self) -> bool:
+        return demo_protection.is_protected_knowledge_article(self)

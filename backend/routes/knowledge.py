@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .. import knowledge_crud, models, schemas
+from .. import demo_protection, knowledge_crud, models, schemas
 from ..database import get_db
 from ..enums import KnowledgeCategory
 
@@ -21,6 +21,26 @@ def create_article(
     article: schemas.KnowledgeArticleCreate,
     db: Session = Depends(get_db),
 ) -> models.KnowledgeArticle:
+    if demo_protection.is_demo_mode_enabled():
+        if demo_protection.is_protected_knowledge_title(article.title):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This knowledge article title is reserved for protected demo records.",
+            )
+
+        existing_articles = knowledge_crud.get_articles(db=db)
+        extra_count = sum(
+            1
+            for existing_article in existing_articles
+            if not demo_protection.is_protected_knowledge_article(existing_article)
+        )
+
+        if extra_count >= demo_protection.get_max_extra_knowledge_articles():
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Demo knowledge article limit reached. Delete a temporary article before creating another.",
+            )
+
     try:
         return knowledge_crud.create_article(db, article)
     except IntegrityError as exc:
@@ -75,6 +95,20 @@ def update_article(
             detail="Knowledge article not found",
         )
 
+    if demo_protection.is_protected_knowledge_article(db_article):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Protected demo article - create a new article to test editing.",
+        )
+
+    if demo_protection.is_demo_mode_enabled() and demo_protection.is_protected_knowledge_title(
+        article_update.title
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This knowledge article title is reserved for protected demo records.",
+        )
+
     try:
         return knowledge_crud.update_article(db, db_article, article_update)
     except IntegrityError as exc:
@@ -94,6 +128,12 @@ def delete_article(article_id: int, db: Session = Depends(get_db)) -> Response:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Knowledge article not found",
+        )
+
+    if demo_protection.is_protected_knowledge_article(db_article):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Protected demo article - create a new article to test deletion.",
         )
 
     knowledge_crud.delete_article(db, db_article)

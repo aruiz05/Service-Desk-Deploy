@@ -218,6 +218,12 @@ The seed operation is designed for local development and demo use. It inserts on
 
 Do not commit `.env` files or real database credentials.
 
+## Public Demo Mode
+
+Set `DEMO_MODE=true` for a public demo deployment. Demo mode keeps seeded tickets and seeded knowledge-base articles readable, but prevents anonymous visitors from editing or deleting those records.
+
+Newly created demo tickets and knowledge-base articles can still be created, edited, and deleted for testing. Demo mode also limits extra non-seeded records with `DEMO_MAX_EXTRA_TICKETS` and `DEMO_MAX_EXTRA_KNOWLEDGE_ARTICLES`. Local development remains unrestricted by default when `DEMO_MODE` is unset or `false`.
+
 ## API Documentation
 
 After starting the backend, open:
