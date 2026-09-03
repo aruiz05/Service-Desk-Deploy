@@ -2,7 +2,7 @@ from collections import Counter
 from datetime import timedelta
 
 from pydantic import ValidationError
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,7 @@ SEED_TICKETS = [
         "department": Department.FINANCE,
         "category": TicketCategory.PHISHING,
         "status": TicketStatus.NEW,
-        "days_ago": 1,
+        "days_ago": 0,
     },
     {
         "title": "QR Code Login Verification Email",
@@ -366,23 +366,35 @@ SEED_TICKETS = [
 ]
 
 
-# Check whether this specific seed dataset has already been inserted.
-def seed_already_exists(db: Session) -> bool:
-    # Titles and fictional emails are stable identifiers for this seed data.
+def get_seed_ticket_key(ticket: dict | models.Ticket) -> tuple[str, str]:
+    if isinstance(ticket, dict):
+        return ticket["title"], ticket["requester_email"]
+
+    return ticket.title, ticket.requester_email
+
+
+# Find known seed records that already exist without touching other tickets.
+def get_existing_seed_ticket_keys(db: Session) -> set[tuple[str, str]]:
     seed_titles = [ticket["title"] for ticket in SEED_TICKETS]
     seed_emails = [ticket["requester_email"] for ticket in SEED_TICKETS]
 
-    # Count matching tickets without deleting or changing existing records.
-    existing_seed_count = db.scalar(
-        select(func.count())
-        .select_from(models.Ticket)
-        .where(
+    existing_tickets = db.scalars(
+        select(models.Ticket).where(
             models.Ticket.title.in_(seed_titles),
             models.Ticket.requester_email.in_(seed_emails),
         )
-    )
+    ).all()
 
-    return bool(existing_seed_count)
+    return {get_seed_ticket_key(ticket) for ticket in existing_tickets}
+
+
+def get_database_backend_name() -> str:
+    if engine.dialect.name == "postgresql":
+        return "PostgreSQL"
+    if engine.dialect.name == "sqlite":
+        return "SQLite"
+
+    return engine.dialect.name
 
 
 # Build realistic timestamps for each seed ticket.
@@ -517,34 +529,34 @@ def print_summary(tickets: list[models.Ticket]) -> None:
         print(f"{status.value}: {status_counts[status.value]}")
 
 
-# Main seed operation for local development data.
+# Main seed operation for local development and demo deployment data.
 def seed_database() -> None:
+    print(f"Seeding database backend: {get_database_backend_name()}")
+
     # Ensure tables exist when the script runs outside the FastAPI server.
     Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as db:
-        # Skip instead of duplicating the fixed development dataset.
-        if seed_already_exists(db):
-            print("Database already contains the development seed dataset.")
-            print("Seed operation skipped.")
-        else:
-            created_tickets = []
+        existing_seed_keys = get_existing_seed_ticket_keys(db)
+        created_tickets = []
 
-            try:
-                # Build all seed tickets before committing any of them.
-                for index, seed_ticket in enumerate(SEED_TICKETS):
+        try:
+            # Build missing seed tickets before committing any of them.
+            for index, seed_ticket in enumerate(SEED_TICKETS):
+                if get_seed_ticket_key(seed_ticket) not in existing_seed_keys:
                     created_tickets.append(create_seed_ticket(db, seed_ticket, index))
 
+            if created_tickets:
                 # Flush assigns generated values so validation can inspect them.
                 db.flush()
                 validate_seeded_tickets(created_tickets)
                 db.commit()
-            except (IntegrityError, ValidationError, ValueError) as exc:
-                # Roll back so a failed seed run does not leave partial data.
-                db.rollback()
-                raise RuntimeError("Seed operation failed. No seed tickets were saved.") from exc
+        except (IntegrityError, ValidationError, ValueError) as exc:
+            # Roll back so a failed seed run does not leave partial data.
+            db.rollback()
+            raise RuntimeError("Seed operation failed. No seed tickets were saved.") from exc
 
-            print_summary(created_tickets)
+        print_summary(created_tickets)
 
         # Add any missing knowledge-base articles without touching existing ones.
         created_articles = knowledge_seed.seed_knowledge_articles(db)

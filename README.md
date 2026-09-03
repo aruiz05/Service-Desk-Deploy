@@ -204,15 +204,19 @@ frontend/.env.example
 
 For local development, the frontend falls back to `http://127.0.0.1:8000` when `VITE_API_BASE_URL` is not set. Do not commit real secrets in `.env` files.
 
-## Development Seed Data
+## Demo Seed Data
 
-After activating the Python virtual environment, populate the local SQLite database with fictional tickets and knowledge base articles:
+After activating the Python virtual environment, populate the configured database with fictional tickets and knowledge base articles:
 
 ```bash
 python -m backend.seed
 ```
 
-The seed operation is designed for local development and demo use. It skips duplicate ticket seed data and inserts only missing knowledge-base articles. Demo tickets use fictional names and `example.com` email addresses.
+`DATABASE_URL` determines the target database. When `DATABASE_URL` is unset, the seed script uses the local SQLite fallback. When `DATABASE_URL` points to PostgreSQL, the same command seeds that PostgreSQL database.
+
+The seed operation is designed for local development and demo use. It inserts only missing known demo tickets and missing knowledge-base articles, so rerunning it does not duplicate the full demo dataset or delete user-created records. Demo data uses fictional names and `example.com` email addresses.
+
+Do not commit `.env` files or real database credentials.
 
 ## API Documentation
 
