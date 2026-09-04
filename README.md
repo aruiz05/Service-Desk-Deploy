@@ -1,52 +1,124 @@
-# Cybersecurity Awareness Service Desk
+# Cybersecurity Service Desk Simulator
 
-Cybersecurity Awareness Service Desk is a portfolio project that simulates an enterprise cybersecurity awareness and service desk request management system. Employees can submit cybersecurity requests, while analysts can triage, manage, resolve, measure, and report on tickets.
+This is a personal full stack personal project that simulates enterprise security request management and service support workflows. It includes ticket intake, automated routing, SLA tracking, analytics, reporting, public demo protections, and an authenticated admin mode.
 
-The application is designed as a full local demo with a React frontend, a FastAPI REST API, and a SQLite development database.
+The project is built as a deployed React/FastAPI application with PostgreSQL persistence. The interface uses a retro visual system while keeping the workflows practical for a service desk or security environment.
+
+## Live Demo
+
+- Live application: https://service-desk-deploy-vert.vercel.app
+- Backend API: https://service-desk-deploy.onrender.com
+- API docs: https://service-desk-deploy.onrender.com/docs
+
+## Demo Notice
+
+The public deployment includes seeded demonstration records for review. Seeded tickets and knowledge base articles are readable by visitors, but protected from anonymous edits and deletes. Visitors can still create, edit, and delete allowed temporary records for testing.
+
+Admin Mode exists for protected record management, but admin credentials are not published. Secrets and credentials are configured only through backend environment variables.
+
+## Screenshots
+
+The current screenshots are stored in `screenshots/` and reflect the retro  design.
+
+### Landing Page
+
+<img src="screenshots/homepage.png" width="900" alt="Retro landing page for Cybersecurity Service Desk Simulator">
+
+### Dashboard
+
+<img src="screenshots/Dashboard1.png" width="900" alt="Dashboard with ticket metrics and trend analytics">
+
+<img src="screenshots/Dashboard2.png" width="900" alt="Dashboard analytics charts">
+
+<img src="screenshots/Dashboard3.png" width="900" alt="Dashboard SLA analytics">
+
+### Ticket Queue
+
+<img src="screenshots/Tickets.png" width="900" alt="Ticket queue with filters, sorting, and status badges">
+
+### Submit Request
+
+<img src="screenshots/Submit-Request.png" width="900" alt="Submit cybersecurity request form">
+
+### Knowledge Base
+
+<img src="screenshots/KB.png" width="900" alt="Knowledge base article list">
+
+### Reports
+
+<img src="screenshots/Reports.png" width="900" alt="Reports page with CSV export controls">
 
 ## Features
 
 ### Ticket Management
 
-- Submit cybersecurity awareness and security support requests
-- Generate sequential ticket numbers automatically
-- Route tickets to the correct security team based on category
-- Assign default priority based on category
+- Create, view, update, and delete cybersecurity request tickets
+- Generate sequential `SEC-######` ticket numbers
 - Search, filter, sort, and paginate the ticket queue
-- Update ticket status, priority, assigned team, and resolution notes
-- Delete tickets with confirmation
+- Track status, priority, assigned team, requester, timestamps, and resolution notes
+- View detailed ticket records with protected-demo indicators
 
-### Service Management
+### Security Workflow Automation
 
-- Track first response time automatically
-- Track resolution time automatically
-- Evaluate first response SLA status
-- Report SLA compliance overall and by priority
+- Route tickets to a security team based on category
+- Assign a default priority based on request type
+- Record first-response and resolution timestamps from workflow updates
 
-### Analytics
+Example routing:
 
-- KPI dashboard for ticket volume and service performance
-- Ticket counts by category, status, and priority
-- Created vs. resolved trend chart
-- SLA outcome dashboard
-- SLA performance table by priority
+| Category | Assigned Team |
+| --- | --- |
+| Phishing | Human Risk Management |
+| Password Security | Identity and Access Management |
+| Vulnerability | Vulnerability Management |
+| Data Loss Prevention | Data Protection |
+
+### Analytics & SLA
+
+- Dashboard metrics for ticket volume and service performance
+- Category, status, priority, trend, and SLA analytics
+- First response SLA status: `Met`, `Breached`, or `Pending`
+- SLA compliance summary and per-priority breakdown
+
+SLA targets:
+
+| Priority | First Response Target |
+| --- | --- |
+| Critical | 60 minutes |
+| High | 240 minutes |
+| Medium | 480 minutes |
+| Low | 1440 minutes |
 
 ### Knowledge Base
 
-- Store cybersecurity guidance articles
-- Browse articles by title, summary, category, and update date
-- Search article title, summary, and content
+- Browse and search cybersecurity guidance articles
 - Filter articles by category
-- View article detail pages
-- Create, edit, and delete articles
+- Create, edit, and delete allowed temporary articles
+- Protect seeded public-demo articles from anonymous edits and deletes
 
 ### Reporting
 
 - Export tickets to CSV
-- Filter CSV exports by status, category, priority, assigned team, department, and created date range
-- Include clean headers, readable timestamps, and blank values for nullable fields
+- Filter reports by status, category, priority, assigned team, department, and date range
+- Download reports through the backend `/reports/tickets.csv` endpoint
+
+### Demo & Administration
+
+- Public demo mode protects seeded records while keeping the app interactive
+- Single-admin authentication uses signed bearer tokens
+- The frontend stores admin tokens in `sessionStorage`
+- Admin Mode allows authorized management of protected demo records
 
 ## Tech Stack
+
+### Frontend
+
+- React
+- Vite
+- JavaScript
+- React Router
+- Recharts
+- CSS
 
 ### Backend
 
@@ -54,108 +126,88 @@ The application is designed as a full local demo with a React frontend, a FastAP
 - FastAPI
 - Uvicorn
 - SQLAlchemy
-- SQLite
 - Pydantic
 
-### Frontend
+### Database
 
-- JavaScript
-- React
-- Vite
-- React Router
-- Recharts
-- CSS
+- PostgreSQL in production
+- SQLite local fallback when `DATABASE_URL` is not set
 
-### Other
+### Deployment & Tools
 
+- Vercel frontend deployment
+- Render FastAPI Web Service
+- Render PostgreSQL
+- Git and GitHub
 - REST API
 - CSV reporting
-- Git and GitHub
 
 ## Architecture
 
-The project uses a simple full stack architecture:
-
-```text
-React frontend
--> REST API requests
--> FastAPI routes
--> CRUD, ticket workflow, analytics, SLA, and reporting logic
--> SQLAlchemy models and sessions
--> SQLite database
+```mermaid
+flowchart TD
+    Browser[Browser] --> Frontend[Vercel React/Vite Frontend]
+    Frontend -->|HTTPS REST API| Backend[Render FastAPI Backend]
+    Backend -->|SQLAlchemy| Database[(Render PostgreSQL)]
+    Backend -. local fallback .-> SQLite[(SQLite)]
 ```
 
-The frontend is responsible for presentation, navigation, forms, and user interaction. Backend routes handle HTTP request and response behavior. Ticket workflow logic, SLA evaluation, analytics calculations, CSV generation, and database operations are kept in backend modules instead of being duplicated in React.
+Admin authentication flow:
 
-## Ticket Workflow
+```mermaid
+sequenceDiagram
+    participant User as Admin User
+    participant Frontend as React Frontend
+    participant Backend as FastAPI Backend
+
+    User->>Frontend: Submit admin login
+    Frontend->>Backend: POST /auth/login
+    Backend-->>Frontend: Signed access token
+    Frontend->>Frontend: Store token in sessionStorage
+    Frontend->>Backend: Authorization bearer token
+    Backend-->>Frontend: Protected admin operation result
+```
+
+## Ticket Lifecycle
 
 ```text
 Employee submits request
--> Ticket number is generated
--> Category determines assigned team
--> Category determines default priority
--> Ticket starts as New
--> Analyst starts work
--> First response timestamp is recorded
--> Analyst updates priority or team if needed
--> Analyst resolves ticket
--> Resolution timestamp and notes are stored
--> SLA, analytics, and reports reflect the ticket state
+-> Backend generates ticket number
+-> Backend assigns category-driven priority and team
+-> Ticket enters the queue as New
+-> Analyst or admin updates progress
+-> First-response and resolution timestamps are recorded
+-> SLA, analytics, and reports reflect the updated state
 ```
 
-## SLA Rules
+## API Overview
 
-SLA tracking measures first response time, not total resolution time.
+FastAPI exposes interactive documentation at `/docs` and `/redoc`.
 
-| Priority | First Response Target |
+| Group | Purpose |
 | --- | --- |
-| Critical | 1 hour |
-| High | 4 hours |
-| Medium | 8 hours |
-| Low | 24 hours |
+| `/health` | API and database health check |
+| `/tickets` | Ticket CRUD, search, filters, sorting, and pagination |
+| `/analytics` | Dashboard metrics, trends, status, priority, category, and SLA analytics |
+| `/knowledge` | Knowledge-base article CRUD, search, and filtering |
+| `/reports` | CSV ticket report export |
+| `/auth` | Admin login and current admin-session status |
 
-Pending tickets are excluded from SLA compliance percentage calculations. Compliance is calculated as:
-
-```text
-Met / (Met + Breached) * 100
-```
-
-## Project Structure
+Example API requests:
 
 ```text
-backend/
-  main.py              FastAPI application setup and router registration
-  database.py          SQLAlchemy engine, session, and Base configuration
-  models.py            SQLAlchemy database models
-  schemas.py           Pydantic request and response schemas
-  enums.py             Shared enum values
-  crud.py              Ticket database operations
-  knowledge_crud.py    Knowledge-base database operations
-  ticket_logic.py      Ticket numbering, routing, priority, and timestamp logic
-  sla.py               SLA targets and evaluation helpers
-  analytics.py         Dashboard analytics calculations
-  reports.py           CSV report generation
-  seed.py              Development seed entry point
-  knowledge_seed.py    Knowledge base seed data
-  routes/              FastAPI route modules
-
-frontend/
-  src/
-    components/        Shared React UI components
-    constants/         Shared frontend option lists
-    pages/             Route level React pages
-    services/          API client functions
-    utils/             Formatting helpers
-    App.jsx            React Router configuration
-    main.jsx           React entry point
-    styles.css         Application styles
-  .env.example         Example frontend API URL
-  package.json         Frontend scripts and dependencies
-  package-lock.json    Locked frontend dependency versions
-  vite.config.js       Vite configuration
+GET /tickets?status=New
+GET /tickets?search=phishing
+GET /tickets?sort_by=ticket_number&sort_order=asc
+GET /tickets?page=2&page_size=10
+GET /analytics/trends?days=30
+GET /knowledge?category=Phishing
+GET /reports/tickets.csv?priority=High
 ```
 
-## Backend Setup
+## Local Development
+
+### Backend
 
 From the repository root:
 
@@ -166,13 +218,13 @@ pip install -r backend/requirements.txt
 uvicorn backend.main:app --reload
 ```
 
-The API runs at:
+The backend runs at:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-## Frontend Setup
+### Frontend
 
 From the repository root:
 
@@ -182,181 +234,93 @@ npm install
 npm run dev
 ```
 
-The frontend development server runs at:
+The frontend runs at:
 
 ```text
 http://127.0.0.1:5173
 ```
 
-## Environment Variables
+### Optional Seed Data
 
-The frontend uses one optional environment variable:
-
-```text
-VITE_API_BASE_URL=http://127.0.0.1:8000
-```
-
-An example file is provided at:
-
-```text
-frontend/.env.example
-```
-
-For local development, the frontend falls back to `http://127.0.0.1:8000` when `VITE_API_BASE_URL` is not set. Do not commit real secrets in `.env` files.
-
-## Demo Seed Data
-
-After activating the Python virtual environment, populate the configured database with fictional tickets and knowledge base articles:
+After activating the backend virtual environment, seed the configured database with fictional demo records:
 
 ```bash
 python -m backend.seed
 ```
 
-`DATABASE_URL` determines the target database. When `DATABASE_URL` is unset, the seed script uses the local SQLite fallback. When `DATABASE_URL` points to PostgreSQL, the same command seeds that PostgreSQL database.
+When `DATABASE_URL` is unset, this uses the local SQLite fallback. When `DATABASE_URL` points to PostgreSQL, the same command targets that configured database. Do not reseed the production database unless that is the intended operation.
 
-The seed operation is designed for local development and demo use. It inserts only missing known demo tickets and missing knowledge-base articles, so rerunning it does not duplicate the full demo dataset or delete user-created records. Demo data uses fictional names and `example.com` email addresses.
+## Environment Variables
 
-Do not commit `.env` files or real database credentials.
+Safe example files are provided at `.env.example` and `frontend/.env.example`.
 
-## Public Demo Mode
+### Backend
 
-Set `DEMO_MODE=true` for a public demo deployment. Demo mode keeps seeded tickets and seeded knowledge-base articles readable, but prevents anonymous visitors from editing or deleting those records.
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Optional database connection URL; defaults to local SQLite when unset |
+| `FRONTEND_URL` | Optional deployed frontend origin for CORS |
+| `DEMO_MODE` | Enables public demo protections when set to `true` |
+| `DEMO_MAX_EXTRA_TICKETS` | Limits extra non-seeded tickets in demo mode |
+| `DEMO_MAX_EXTRA_KNOWLEDGE_ARTICLES` | Limits extra non-seeded knowledge articles in demo mode |
+| `ADMIN_USERNAME` | Single admin username |
+| `ADMIN_PASSWORD_HASH` | Bcrypt hash for the admin password |
+| `ADMIN_TOKEN_SECRET` | Secret used to sign admin access tokens |
+| `ADMIN_TOKEN_EXPIRE_MINUTES` | Admin token lifetime in minutes |
 
-Newly created demo tickets and knowledge-base articles can still be created, edited, and deleted for testing. Demo mode also limits extra non-seeded records with `DEMO_MAX_EXTRA_TICKETS` and `DEMO_MAX_EXTRA_KNOWLEDGE_ARTICLES`. Local development remains unrestricted by default when `DEMO_MODE` is unset or `false`.
+### Frontend
 
-## Admin Authentication
+| Variable | Purpose |
+| --- | --- |
+| `VITE_API_BASE_URL` | Backend API base URL used by the React app |
 
-Production supports one administrator account for managing protected seeded demo records while `DEMO_MODE` remains active. Public visitors do not need accounts and there is no public registration.
+Do not commit real `.env` files, database URLs, token secrets, password hashes, or credentials.
 
-Admin credentials are configured only in backend environment variables. The password is stored as a bcrypt hash, and successful login returns a short-lived signed bearer token. The frontend stores that token in `sessionStorage`, not persistent browser storage, so the admin session is limited to the current browser session. An authenticated admin can edit or delete seeded protected tickets and knowledge-base articles without changing public demo behavior.
+## Security & Demo Safety
 
-Generate an admin password hash with:
+This is a portfolio application, not a production security product. The public demo uses seeded fictional data and protects seeded demo records from anonymous edits and deletes. Admin authentication uses signed bearer tokens, and the frontend stores the token in `sessionStorage` for the current browser session.
 
-```bash
-python -m backend.generate_admin_hash
-```
+Backend authorization checks are responsible for protected operations. Secrets are provided through environment variables and should not appear in frontend source, screenshots, commits, or documentation.
 
-Generate a token-signing secret locally and store it only in the backend deployment environment:
+## Deployment
 
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(64))"
-```
+Current deployment:
 
-## API Documentation
+| Layer | Platform |
+| --- | --- |
+| Frontend | Vercel |
+| Backend | Render Web Service |
+| Database | Render PostgreSQL |
 
-After starting the backend, open:
+The Vercel frontend calls the Render FastAPI backend over HTTPS. The backend connects to Render PostgreSQL through SQLAlchemy. Local development can run against SQLite without requiring a cloud database.
 
-- http://127.0.0.1:8000/docs
-- http://127.0.0.1:8000/redoc
-
-## API Endpoints
-
-### Health
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/health` | Check API and database connectivity |
-
-### Tickets
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| POST | `/tickets` | Create a ticket |
-| GET | `/tickets` | List tickets with search, filters, sorting, and pagination |
-| GET | `/tickets/{ticket_id}` | Retrieve one ticket |
-| PATCH | `/tickets/{ticket_id}` | Update ticket workflow fields |
-| DELETE | `/tickets/{ticket_id}` | Delete a ticket |
-
-### Analytics
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/analytics/summary` | Dashboard KPI and SLA summary |
-| GET | `/analytics/categories` | Ticket counts by category |
-| GET | `/analytics/status` | Ticket counts by status |
-| GET | `/analytics/priorities` | Ticket counts by priority |
-| GET | `/analytics/trends` | Created and resolved ticket trends |
-| GET | `/analytics/sla` | Overall and per priority SLA performance |
-
-### Knowledge Base
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| POST | `/knowledge` | Create a knowledge base article |
-| GET | `/knowledge` | List articles with search and category filtering |
-| GET | `/knowledge/{article_id}` | Retrieve one article |
-| PATCH | `/knowledge/{article_id}` | Update an article |
-| DELETE | `/knowledge/{article_id}` | Delete an article |
-
-### Reports
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/reports/tickets.csv` | Download a filtered ticket CSV report |
-
-## Example API Requests
+## Project Structure
 
 ```text
-GET /tickets?status=New
-GET /tickets?category=Phishing
-GET /tickets?priority=Critical
-GET /tickets?department=Finance
-GET /tickets?assigned_team=Human Risk Management
-GET /tickets?search=Microsoft
-GET /tickets?sort_by=ticket_number&sort_order=asc
-GET /tickets?page=2&page_size=10
-GET /analytics/trends?days=30
-GET /knowledge?category=Phishing
-GET /knowledge?search=password
-GET /reports/tickets.csv?status=Resolved
-GET /reports/tickets.csv?start_date=2026-01-01&end_date=2026-01-31
+backend/
+  main.py              FastAPI app setup, CORS, health check, router registration
+  database.py          SQLAlchemy engine/session configuration
+  routes/              Ticket, analytics, knowledge, report, and auth routes
+  ticket_logic.py      Ticket numbering, routing, priority, and timestamps
+  sla.py               First-response SLA evaluation
+  analytics.py         Dashboard metric calculations
+  reports.py           CSV generation
+  seed.py              Fictional demo ticket seed data
+
+frontend/
+  src/
+    components/        Shared layout, cards, charts, and badges
+    pages/             Route-level React pages
+    services/api.js    API client and admin token handling
+    styles.css         Retro cyber-operations visual system
+  package.json         Vite scripts and frontend dependencies
+  vercel.json          SPA route rewrites for Vercel
+
+screenshots/           Current project screenshots
+README.md
+.env.example
 ```
 
-## Screenshots
+## Portfolio Context
 
-## Home Page
-
-<img src="homepage.png" width="900">
-
-
-### Dashboard
-
-<img src="screenshots/Dashboard1.png" width="900">
-
-<img src="screenshots/Dashboard2.png" width="900">
-
-<img src="screenshots/Dashboard3.png" width="900">
-
-### Tickets
-
-<img src="screenshots/Tickets.png" width="900">
-
-### Submit Request
-
-<img src="screenshots/Submit-Request.png" width="900">
-
-### Knowledge Base
-
-<img src="screenshots/KB.png" width="900">
-
-### Reports
-
-<img src="screenshots/Reports.png" width="900">
-
-## Development Notes
-
-- The SQLite database is local development data and is ignored by Git.
-- `frontend/node_modules/` and `frontend/dist/` are generated locally and ignored by Git.
-- `frontend/package-lock.json` should remain tracked for reproducible frontend installs.
-- The project does not implement authentication, user accounts, cloud deployment, ServiceNow integration, AI features, email notifications, or Docker deployment.
-
-## Future Improvements
-
-- Authentication and role based access control
-- PostgreSQL for production style database usage
-- Docker/container deployment
-- Email or Microsoft Teams notifications
-- Ticket audit history
-- ServiceNow integration
-- AI assisted ticket classification or summarization
-- Cloud deployment
+This project demonstrates full stack application development, REST API design, relational data modeling, deployment configuration, frontend state management, analytics visualization, CSV reporting, and security oriented workflow design.
