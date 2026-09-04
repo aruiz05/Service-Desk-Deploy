@@ -164,3 +164,19 @@ class KnowledgeArticleResponse(KnowledgeArticleBase):
     demo_protected: bool = False
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AdminLoginRequest(BaseModel):
+    username: str = Field(..., min_length=1, max_length=100)
+    password: str = Field(..., min_length=1)
+
+
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+
+class AdminStatusResponse(BaseModel):
+    authenticated: bool
+    role: str | None = None

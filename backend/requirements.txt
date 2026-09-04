@@ -15,3 +15,9 @@ pydantic>=2.0,<3.0
 
 # Email validation support for Pydantic EmailStr fields.
 email-validator>=2.0,<3.0
+
+# Signed admin access tokens.
+PyJWT>=2.10,<3.0
+
+# Password hashing for the single admin credential.
+bcrypt>=4.0,<5.0

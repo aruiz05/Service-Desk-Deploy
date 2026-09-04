@@ -224,6 +224,24 @@ Set `DEMO_MODE=true` for a public demo deployment. Demo mode keeps seeded ticket
 
 Newly created demo tickets and knowledge-base articles can still be created, edited, and deleted for testing. Demo mode also limits extra non-seeded records with `DEMO_MAX_EXTRA_TICKETS` and `DEMO_MAX_EXTRA_KNOWLEDGE_ARTICLES`. Local development remains unrestricted by default when `DEMO_MODE` is unset or `false`.
 
+## Admin Authentication
+
+Production supports one administrator account for managing protected seeded demo records while `DEMO_MODE` remains active. Public visitors do not need accounts and there is no public registration.
+
+Admin credentials are configured only in backend environment variables. The password is stored as a bcrypt hash, and successful login returns a short-lived signed bearer token. The frontend stores that token in `sessionStorage`, not persistent browser storage, so the admin session is limited to the current browser session. An authenticated admin can edit or delete seeded protected tickets and knowledge-base articles without changing public demo behavior.
+
+Generate an admin password hash with:
+
+```bash
+python -m backend.generate_admin_hash
+```
+
+Generate a token-signing secret locally and store it only in the backend deployment environment:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
+```
+
 ## API Documentation
 
 After starting the backend, open:

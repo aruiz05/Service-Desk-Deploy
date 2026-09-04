@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .. import demo_protection, knowledge_crud, models, schemas
+from .. import auth, demo_protection, knowledge_crud, models, schemas
 from ..database import get_db
 from ..enums import KnowledgeCategory
 
@@ -86,6 +86,7 @@ def update_article(
     article_id: int,
     article_update: schemas.KnowledgeArticleUpdate,
     db: Session = Depends(get_db),
+    is_admin: bool = Depends(auth.get_optional_admin),
 ) -> models.KnowledgeArticle:
     db_article = knowledge_crud.get_article(db, article_id)
     if db_article is None:
@@ -95,7 +96,7 @@ def update_article(
             detail="Knowledge article not found",
         )
 
-    if demo_protection.is_protected_knowledge_article(db_article):
+    if demo_protection.is_protected_knowledge_article(db_article) and not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Protected demo article - create a new article to test editing.",
@@ -121,7 +122,11 @@ def update_article(
 
 # Delete a knowledge-base article by id and return 204 when successful.
 @router.delete("/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_article(article_id: int, db: Session = Depends(get_db)) -> Response:
+def delete_article(
+    article_id: int,
+    db: Session = Depends(get_db),
+    is_admin: bool = Depends(auth.get_optional_admin),
+) -> Response:
     db_article = knowledge_crud.get_article(db, article_id)
     if db_article is None:
         # Missing articles cannot be deleted.
@@ -130,7 +135,7 @@ def delete_article(article_id: int, db: Session = Depends(get_db)) -> Response:
             detail="Knowledge article not found",
         )
 
-    if demo_protection.is_protected_knowledge_article(db_article):
+    if demo_protection.is_protected_knowledge_article(db_article) and not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Protected demo article - create a new article to test deletion.",

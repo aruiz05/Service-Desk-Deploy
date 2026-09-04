@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .. import crud, demo_protection, models, schemas
+from .. import auth, crud, demo_protection, models, schemas
 from ..database import get_db
 from ..enums import AssignedTeam, Department, TicketCategory, TicketPriority, TicketStatus
 
@@ -141,6 +141,7 @@ def update_ticket(
     ticket_id: int,
     ticket_update: schemas.TicketUpdate,
     db: Session = Depends(get_db),
+    is_admin: bool = Depends(auth.get_optional_admin),
 ) -> models.Ticket:
     db_ticket = crud.get_ticket(db, ticket_id)
     if db_ticket is None:
@@ -150,7 +151,7 @@ def update_ticket(
             detail="Ticket not found",
         )
 
-    if demo_protection.is_protected_ticket(db_ticket):
+    if demo_protection.is_protected_ticket(db_ticket) and not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Protected demo ticket - create a new ticket to test editing.",
@@ -176,7 +177,11 @@ def update_ticket(
 
 # Delete a ticket by id and return 204 when successful
 @router.delete("/{ticket_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_ticket(ticket_id: int, db: Session = Depends(get_db)) -> Response:
+def delete_ticket(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    is_admin: bool = Depends(auth.get_optional_admin),
+) -> Response:
     db_ticket = crud.get_ticket(db, ticket_id)
     if db_ticket is None:
         # Missing tickets cannot be deleted
@@ -185,7 +190,7 @@ def delete_ticket(ticket_id: int, db: Session = Depends(get_db)) -> Response:
             detail="Ticket not found",
         )
 
-    if demo_protection.is_protected_ticket(db_ticket):
+    if demo_protection.is_protected_ticket(db_ticket) and not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Protected demo ticket - create a new ticket to test deletion.",

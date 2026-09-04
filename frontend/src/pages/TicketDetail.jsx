@@ -7,12 +7,14 @@ import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
 } from "../constants/tickets.js";
+import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import { deleteTicket, getTicket, updateTicket } from "../services/api.js";
 import { formatDateTime } from "../utils/format.js";
 
 function TicketDetail() {
   const { ticketId } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAdminAuth();
   const [ticket, setTicket] = useState(null);
   const [formData, setFormData] = useState({
     priority: "",
@@ -95,6 +97,7 @@ function TicketDetail() {
 
   const hasChanges = Object.keys(patchPayload).length > 0;
   const isDemoProtected = Boolean(ticket?.demo_protected);
+  const shouldBlockProtectedControls = isDemoProtected && !isAdmin;
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -110,7 +113,7 @@ function TicketDetail() {
   async function saveChanges(event) {
     event.preventDefault();
 
-    if (isDemoProtected) {
+    if (shouldBlockProtectedControls) {
       setSaveError(
         "Protected demo record - create a new ticket to test editing or deletion.",
       );
@@ -143,7 +146,7 @@ function TicketDetail() {
   }
 
   async function handleDeleteTicket() {
-    if (isDeleting || isDemoProtected) {
+    if (isDeleting || shouldBlockProtectedControls) {
       return;
     }
 
@@ -205,8 +208,9 @@ function TicketDetail() {
           <h2>{ticket.title}</h2>
           {isDemoProtected ? (
             <p className="demo-protection-notice">
-              Protected demo record - create a new ticket to test editing or
-              deletion.
+              {isAdmin
+                ? "Admin Mode - protected demo record can be edited."
+                : "Protected demo record - create a new ticket to test editing or deletion."}
             </p>
           ) : null}
         </div>
@@ -296,7 +300,7 @@ function TicketDetail() {
               name="priority"
               value={formData.priority}
               onChange={updateField}
-              disabled={isDemoProtected}
+              disabled={shouldBlockProtectedControls}
             >
               {TICKET_PRIORITIES.map((priority) => (
                 <option key={priority} value={priority}>
@@ -313,7 +317,7 @@ function TicketDetail() {
               name="status"
               value={formData.status}
               onChange={updateField}
-              disabled={isDemoProtected}
+              disabled={shouldBlockProtectedControls}
             >
               {TICKET_STATUSES.map((status) => (
                 <option key={status} value={status}>
@@ -330,7 +334,7 @@ function TicketDetail() {
               name="assigned_team"
               value={formData.assigned_team}
               onChange={updateField}
-              disabled={isDemoProtected}
+              disabled={shouldBlockProtectedControls}
             >
               {ASSIGNED_TEAMS.map((team) => (
                 <option key={team} value={team}>
@@ -351,7 +355,7 @@ function TicketDetail() {
               rows="5"
               value={formData.resolution_notes}
               onChange={updateField}
-              disabled={isDemoProtected}
+              disabled={shouldBlockProtectedControls}
             />
           </label>
         </div>
@@ -363,7 +367,7 @@ function TicketDetail() {
           <button
             className="primary-button"
             type="submit"
-            disabled={isDemoProtected || !hasChanges || isSaving}
+            disabled={shouldBlockProtectedControls || !hasChanges || isSaving}
           >
             {isSaving ? "Saving..." : "Save Changes"}
           </button>
@@ -375,7 +379,7 @@ function TicketDetail() {
           <p className="panel-label">Destructive Action</p>
           <h3>Delete Ticket</h3>
           <p className="supporting-text">
-            {isDemoProtected
+            {shouldBlockProtectedControls
               ? "Protected demo tickets cannot be removed from the ticket queue."
               : `Permanently remove ${ticket.ticket_number} from the ticket queue.`}
           </p>
@@ -389,7 +393,7 @@ function TicketDetail() {
           <button
             className="danger-button"
             type="button"
-            disabled={isDemoProtected || isDeleting}
+            disabled={shouldBlockProtectedControls || isDeleting}
             onClick={handleDeleteTicket}
           >
             {isDeleting ? "Deleting..." : "Delete Ticket"}

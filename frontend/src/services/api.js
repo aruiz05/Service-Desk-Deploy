@@ -1,7 +1,32 @@
 const configuredBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+  import.meta.env?.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 export const API_BASE_URL = configuredBaseUrl.replace(/\/$/, "");
+export const ADMIN_TOKEN_STORAGE_KEY = "serviceDeskAdminToken";
+
+export function getAdminToken() {
+  return window.sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
+}
+
+export function setAdminToken(token) {
+  window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
+}
+
+export function clearAdminToken() {
+  window.sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+}
+
+function getAuthHeaders() {
+  const token = getAdminToken();
+
+  if (!token) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
 
 async function getResponseData(response) {
   if (response.status === 204) {
@@ -38,6 +63,7 @@ async function apiRequest(path, options = {}) {
     ...options,
     headers: {
       ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...getAuthHeaders(),
       ...options.headers,
     },
   });
@@ -70,6 +96,17 @@ function getFilenameFromContentDisposition(contentDisposition) {
 
 export async function checkHealth() {
   return apiRequest("/health");
+}
+
+export async function loginAdmin(data) {
+  return apiRequest("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getAdminStatus() {
+  return apiRequest("/auth/me");
 }
 
 export async function getTickets(params = {}) {
@@ -163,7 +200,9 @@ export async function downloadTicketReport(params = {}) {
   const path = queryString
     ? `/reports/tickets.csv?${queryString}`
     : "/reports/tickets.csv";
-  const response = await fetch(`${API_BASE_URL}${path}`);
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: getAuthHeaders(),
+  });
 
   if (!response.ok) {
     const responseData = await getResponseData(response);

@@ -9,6 +9,7 @@ const pageTitles = {
   "/submit": "Submit Request",
   "/knowledge": "Knowledge Base",
   "/reports": "Reports",
+  "/admin/login": "Admin Login",
 };
 
 function Layout() {

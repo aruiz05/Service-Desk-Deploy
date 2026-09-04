@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Layout from "./components/Layout.jsx";
+import AdminLogin from "./pages/AdminLogin.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import KnowledgeArticle from "./pages/KnowledgeArticle.jsx";
 import KnowledgeBase from "./pages/KnowledgeBase.jsx";
@@ -20,6 +21,7 @@ function App() {
         <Route path="/knowledge" element={<KnowledgeBase />} />
         <Route path="/knowledge/:articleId" element={<KnowledgeArticle />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

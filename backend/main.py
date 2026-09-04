@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from . import models
 from .database import Base, engine, get_db
 from .routes import analytics as analytics_routes
+from .routes import auth as auth_routes
 from .routes import knowledge
 from .routes import reports
 from .routes import tickets
@@ -50,6 +51,8 @@ app.add_middleware(
 
 # Register ticket CRUD endpoints with the main FastAPI app
 app.include_router(tickets.router)
+# Register admin authentication endpoints
+app.include_router(auth_routes.router)
 # Register analytics endpoints for dashboard-ready metrics
 app.include_router(analytics_routes.router)
 # Register knowledge-base endpoints for article browsing and management

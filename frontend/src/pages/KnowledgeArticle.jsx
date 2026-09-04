@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { KNOWLEDGE_CATEGORIES } from "../constants/knowledge.js";
+import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import {
   deleteKnowledgeArticle,
   getKnowledgeArticle,
@@ -12,6 +13,7 @@ import { formatDateTime } from "../utils/format.js";
 function KnowledgeArticle() {
   const { articleId } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAdminAuth();
   const [article, setArticle] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -95,6 +97,7 @@ function KnowledgeArticle() {
 
   const hasChanges = Object.keys(patchPayload).length > 0;
   const isDemoProtected = Boolean(article?.demo_protected);
+  const shouldBlockProtectedControls = isDemoProtected && !isAdmin;
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -122,7 +125,7 @@ function KnowledgeArticle() {
   async function saveChanges(event) {
     event.preventDefault();
 
-    if (isDemoProtected) {
+    if (shouldBlockProtectedControls) {
       setSaveError(
         "Protected demo record - create a new article to test editing or deletion.",
       );
@@ -157,7 +160,7 @@ function KnowledgeArticle() {
   }
 
   async function handleDeleteArticle() {
-    if (isDeleting || isDemoProtected) {
+    if (isDeleting || shouldBlockProtectedControls) {
       return;
     }
 
@@ -222,8 +225,9 @@ function KnowledgeArticle() {
           <p className="supporting-text">{article.summary}</p>
           {isDemoProtected ? (
             <p className="demo-protection-notice">
-              Protected demo record - create a new article to test editing or
-              deletion.
+              {isAdmin
+                ? "Admin Mode - protected demo record can be edited."
+                : "Protected demo record - create a new article to test editing or deletion."}
             </p>
           ) : null}
         </div>
@@ -231,7 +235,7 @@ function KnowledgeArticle() {
           <button
             className="secondary-button"
             type="button"
-            disabled={isDemoProtected}
+            disabled={shouldBlockProtectedControls}
             onClick={() => {
               if (isEditing) {
                 cancelEdit();
@@ -240,7 +244,7 @@ function KnowledgeArticle() {
               }
             }}
           >
-            {isDemoProtected
+            {shouldBlockProtectedControls
               ? "Protected Demo"
               : isEditing
                 ? "Close Editor"
@@ -358,7 +362,7 @@ function KnowledgeArticle() {
           <p className="panel-label">Destructive Action</p>
           <h3>Delete Article</h3>
           <p className="supporting-text">
-            {isDemoProtected
+            {shouldBlockProtectedControls
               ? "Protected demo articles cannot be removed from the knowledge base."
               : "Permanently remove this article from the knowledge base."}
           </p>
@@ -372,7 +376,7 @@ function KnowledgeArticle() {
           <button
             className="danger-button"
             type="button"
-            disabled={isDemoProtected || isDeleting}
+            disabled={shouldBlockProtectedControls || isDeleting}
             onClick={handleDeleteArticle}
           >
             {isDeleting ? "Deleting..." : "Delete Article"}

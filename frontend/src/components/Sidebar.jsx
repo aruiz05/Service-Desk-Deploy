@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 
+import { useAdminAuth } from "../context/AdminAuthContext.jsx";
+
 const navigationItems = [
   { to: "/", label: "Dashboard" },
   { to: "/tickets", label: "Tickets" },
@@ -9,6 +11,8 @@ const navigationItems = [
 ];
 
 function Sidebar() {
+  const { isAdmin, signOut } = useAdminAuth();
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -30,6 +34,26 @@ function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="sidebar-admin">
+        {isAdmin ? (
+          <>
+            <span className="sidebar-admin-status">Admin Mode</span>
+            <button className="sidebar-admin-button" type="button" onClick={signOut}>
+              Log Out
+            </button>
+          </>
+        ) : (
+          <NavLink
+            to="/admin/login"
+            className={({ isActive }) =>
+              isActive ? "nav-link nav-link-active" : "nav-link"
+            }
+          >
+            Admin Login
+          </NavLink>
+        )}
+      </div>
     </aside>
   );
 }
