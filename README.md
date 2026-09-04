@@ -314,6 +314,10 @@ GET /reports/tickets.csv?start_date=2026-01-01&end_date=2026-01-31
 
 ## Screenshots
 
+## Home Page
+
+<img src="homepage.png" width="900">
+
 
 ### Dashboard
 
