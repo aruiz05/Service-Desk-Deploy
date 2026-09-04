@@ -4,6 +4,8 @@ This is a personal full stack personal project that simulates enterprise securit
 
 The project is built as a deployed React/FastAPI application with PostgreSQL persistence. The interface uses a retro visual system while keeping the workflows practical for a service desk or security environment.
 
+AS OF 09/03/26 IT CURRENTLY USES THE FREE EDITION OF RENDER. RENDER SHUTS OFF THE BACK END AFTER 15 MINUTES OF INACTIVITY. THIS MAY CAUSE THE SITE TO INITALLY BOOT UP SLOWLY. THIS WILL BE FIXED VERY SOON AS SOON AS I BUY THE SUBSCRIPTION. THIS IS NOT AN OPTIMIZATION PROBLEM.
+
 ## Live Demo
 
 - Live application: https://service-desk-deploy-vert.vercel.app
