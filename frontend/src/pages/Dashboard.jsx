@@ -34,22 +34,25 @@ const trendRangeOptions = [
 ];
 
 const chartColors = {
-  created: "#176457",
-  resolved: "#85580e",
-  category: "#2f9e8f",
-  status: ["#2d528f", "#8a5d12", "#624192", "#176457", "#46535d"],
+  created: "#42d6a4",
+  resolved: "#ffdd68",
+  category: "#7ca7ff",
+  status: ["#7ca7ff", "#ffdd68", "#c59cff", "#42d6a4", "#9ab8b0"],
   priority: {
-    Critical: "#9b2f24",
-    High: "#85580e",
-    Medium: "#2d528f",
-    Low: "#176457",
+    Critical: "#ff7568",
+    High: "#ff9f5b",
+    Medium: "#7ca7ff",
+    Low: "#42d6a4",
   },
   sla: {
-    Met: "#176457",
-    Breached: "#9b2f24",
-    Pending: "#8a5d12",
+    Met: "#42d6a4",
+    Breached: "#ff7568",
+    Pending: "#ffdd68",
   },
 };
+
+const chartGridColor = "rgba(134, 255, 218, 0.18)";
+const chartAxisColor = "#9ab8b0";
 
 function hasCountData(items, key = "count") {
   return items.some((item) => Number(item[key]) > 0);
@@ -390,9 +393,14 @@ function Dashboard() {
           <div className="chart-area">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendChartData} margin={{ top: 8, right: 18, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#e5ebef" strokeDasharray="3 3" />
-                <XAxis dataKey="label" tickLine={false} />
-                <YAxis allowDecimals={false} tickLine={false} width={36} />
+                <CartesianGrid stroke={chartGridColor} strokeDasharray="3 3" />
+                <XAxis dataKey="label" tickLine={false} stroke={chartAxisColor} />
+                <YAxis
+                  allowDecimals={false}
+                  tickLine={false}
+                  width={36}
+                  stroke={chartAxisColor}
+                />
                 <Tooltip content={<AnalyticsTooltip />} />
                 <Legend />
                 <Line
@@ -431,13 +439,19 @@ function Dashboard() {
                 layout="vertical"
                 margin={{ top: 8, right: 18, left: 12, bottom: 0 }}
               >
-                <CartesianGrid stroke="#e5ebef" strokeDasharray="3 3" />
-                <XAxis type="number" allowDecimals={false} tickLine={false} />
+                <CartesianGrid stroke={chartGridColor} strokeDasharray="3 3" />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  tickLine={false}
+                  stroke={chartAxisColor}
+                />
                 <YAxis
                   type="category"
                   dataKey="name"
                   width={150}
                   tickLine={false}
+                  stroke={chartAxisColor}
                 />
                 <Tooltip content={<AnalyticsTooltip />} />
                 <Bar dataKey="count" name="Tickets" fill={chartColors.category} />
@@ -481,9 +495,14 @@ function Dashboard() {
           <div className="chart-area">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={priorityChartData} margin={{ top: 8, right: 18, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#e5ebef" strokeDasharray="3 3" />
-                <XAxis dataKey="name" tickLine={false} />
-                <YAxis allowDecimals={false} tickLine={false} width={36} />
+                <CartesianGrid stroke={chartGridColor} strokeDasharray="3 3" />
+                <XAxis dataKey="name" tickLine={false} stroke={chartAxisColor} />
+                <YAxis
+                  allowDecimals={false}
+                  tickLine={false}
+                  width={36}
+                  stroke={chartAxisColor}
+                />
                 <Tooltip content={<AnalyticsTooltip />} />
                 <Bar dataKey="count" name="Tickets">
                   {priorityChartData.map((entry) => (
