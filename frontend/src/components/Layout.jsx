@@ -4,7 +4,7 @@ import Header from "./Header.jsx";
 import Sidebar from "./Sidebar.jsx";
 
 const pageTitles = {
-  "/": "Dashboard",
+  "/dashboard": "Dashboard",
   "/tickets": "Tickets",
   "/submit": "Submit Request",
   "/knowledge": "Knowledge Base",

@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 
 const navigationItems = [
-  { to: "/", label: "Dashboard" },
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/tickets", label: "Tickets" },
   { to: "/submit", label: "Submit Request" },
   { to: "/knowledge", label: "Knowledge Base" },
@@ -25,7 +25,7 @@ function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === "/"}
+            end={item.to === "/dashboard"}
             className={({ isActive }) =>
               isActive ? "nav-link nav-link-active" : "nav-link"
             }
@@ -39,7 +39,11 @@ function Sidebar() {
         {isAdmin ? (
           <>
             <span className="sidebar-admin-status">Admin Mode</span>
-            <button className="sidebar-admin-button" type="button" onClick={signOut}>
+            <button
+              className="sidebar-admin-button"
+              type="button"
+              onClick={signOut}
+            >
               Log Out
             </button>
           </>

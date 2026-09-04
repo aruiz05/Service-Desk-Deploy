@@ -5,6 +5,7 @@ import AdminLogin from "./pages/AdminLogin.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import KnowledgeArticle from "./pages/KnowledgeArticle.jsx";
 import KnowledgeBase from "./pages/KnowledgeBase.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 import Reports from "./pages/Reports.jsx";
 import SubmitRequest from "./pages/SubmitRequest.jsx";
 import TicketDetail from "./pages/TicketDetail.jsx";
@@ -13,8 +14,9 @@ import Tickets from "./pages/Tickets.jsx";
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/tickets/:ticketId" element={<TicketDetail />} />
         <Route path="/submit" element={<SubmitRequest />} />
@@ -23,7 +25,7 @@ function App() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/admin/login" element={<AdminLogin />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

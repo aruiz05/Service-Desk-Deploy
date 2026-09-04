@@ -30,7 +30,7 @@ function AdminLogin() {
 
     try {
       await signIn(formData);
-      navigate("/");
+      navigate("/dashboard");
     } catch {
       setError("Invalid credentials.");
     } finally {
@@ -55,7 +55,7 @@ function AdminLogin() {
           <button
             className="primary-button"
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
           >
             Dashboard
           </button>
